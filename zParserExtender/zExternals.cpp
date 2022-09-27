@@ -1355,9 +1355,9 @@ namespace GOTHIC_ENGINE {
       CP_ENGLISH,
       CP_GERMAN,
       CP_POLISH,
-      CP_CZECH,
       CP_ROMANIAN,
       CP_ITALIAN,
+      CP_CZECH, // order fixed
       CP_SPANISH
     };
 
@@ -1372,7 +1372,7 @@ namespace GOTHIC_ENGINE {
     par->GetParameter( src[0] );
 
     uint lang = Union.GetSystemLanguage() - 1;
-    if( lang >= 8 )
+    if ( lang >= 8 || lang > 2 && src[lang].Length() == 0) // if any string with lang higher than English is empty, substitute it with the English one
       lang = 2;
 
     string ansi = UTF8_To_ANSI( (byte*)src[lang].ToChar(), src[lang].Length(), cp[lang] );
