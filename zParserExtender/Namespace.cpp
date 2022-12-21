@@ -1,5 +1,6 @@
 // Supported with union (c) 2020 Union team
 // Union SOURCE file
+#include <map>
 
 namespace GOTHIC_ENGINE {
   struct NamespaceInfo {
@@ -392,13 +393,73 @@ namespace GOTHIC_ENGINE {
     }
   }
 
+  std::map<string, int> optimizedStringTable[7];
+  int totalStrings[7] = {0};
+  int optimizedStrings[7] = { 0 };
+
 
   HOOK Hook_zCParser_PushOnStack PATCH( &zCParser::PushOnStack, &zCParser::PushOnStack_Union );
 
   zCPar_TreeNode* zCParser::PushOnStack_Union( zCPar_TreeNode* node ) {
+    //if (GetDATIndexByParser(this) == 3) cmd << GetDATNameByIndex(3) << endl;
+
+    if (OptimiseStringTable()) {
+    if (node->token == zPAR_TOK_NEWSTRING) {
+        int parID = GetDATIndexByParser(this);
+        if (parID < 0) cmd << "parID is smaller than 0" << endl;
+        totalStrings[parID]++;
+        if (node->right)	PushTree(node->right);
+        if (node->left)		PushTree(node->left);
+        if (optimizedStringTable[parID].find(string(node->name)) == optimizedStringTable[parID].end()) {
+          // not found - create new string symbol
+          zCPar_Symbol* sym = new zCPar_Symbol;
+
+          sym->type = zPAR_TYPE_STRING;
+          sym->ele = 1;
+          sym->name = zSTRING(char(255)) + zSTRING(stringcount++);
+          sym->SetFlag(zPAR_FLAG_CONST);
+
+          symtab.InsertEnd(sym);
+
+          if (node->name.Length() > 0) sym->SetValue(node->name, 0);
+
+          stack.PushByte(zPAR_TOK_PUSHVAR);
+          stack.PushInt(symtab.GetNumInList() - 1);
+
+          optimizedStringTable[parID].insert(std::make_pair(node->name, symtab.GetNumInList() - 1));
+        }
+        else {
+          // found = string literal already exists - push the already existing symbol
+          optimizedStrings[parID]++;
+          zCPar_Symbol* sym = symtab.GetSymbol(optimizedStringTable[parID].at(node->name));
+
+          if (!sym) {
+            cmd << "Something sussy is going on" << endl;
+            // cmd << "symbtab index: " << optimizedStringTable[parID].at(string(node->name)) << endl;
+          }
+          int symbolID = symtab.GetIndex(sym);
+
+          stack.PushByte(zPAR_TOK_PUSHVAR);
+          stack.PushInt(symbolID);
+        }
+        return node->next;
+      }
+    }
+
     if( node->token == zPAR_TOK_PUSHINDEX && zParserExtender.ExtendedParsingEnabled() )
       CheckTreeNodeName( node );
 
     return THISCALL( Hook_zCParser_PushOnStack )(node);
   }
+
+  HOOK Hook_zCParser_Reset PATCH(&zCParser::Reset, &zCParser::Reset_Union);
+
+  void zCParser::Reset_Union() {
+    //cmd << GetParserNameByParser(this) << " " << __FUNCTION__ << endl;
+    int parID = GetDATIndexByParser(this);
+    if (parID != -1)
+      optimizedStringTable[GetDATIndexByParser(this)].clear();
+    THISCALL(Hook_zCParser_Reset)();
+  }
+
 }

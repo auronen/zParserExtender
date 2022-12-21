@@ -1,7 +1,10 @@
 // This file added in headers queue
 // File: "Sources.h"
 
+
 namespace GOTHIC_ENGINE {
+
+  
 
   string DataDirectory    = "_work\\data\\";
   string ScriptsDirectory = "_Work\\Data\\Scripts\\";
@@ -62,6 +65,16 @@ namespace GOTHIC_ENGINE {
 
     // InitializeColorConstants();
     // InitializePositionConstants();
+    if (OptimiseStringTable())
+    {
+      for (size_t i = 0; i < 7; i++)
+      {
+        cmd << GetDATNameByIndex(i) << endl;
+        cmd << "Amount of string literals: " << totalStrings[i] << endl;
+        cmd << "Number of string literals after optimisation: " << totalStrings[i] - optimizedStrings[i] << endl;
+        cmd << "Number of string literal symbols saved: " << optimizedStrings[i] << endl;
+      }
+    }
   }
 
   void Game_Exit() {

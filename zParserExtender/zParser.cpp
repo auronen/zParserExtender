@@ -44,6 +44,27 @@ namespace GOTHIC_ENGINE {
     if( par == Gothic::Parsers::Menu   ) return "MENU.DAT";
     if( par == Gothic::Parsers::Music  ) return "MUSIC.DAT";
     return "UNKNOWN.DAT";
+
+  }  static string GetDATNameByIndex( int par ) {
+    if( par == 0) return "GOTHIC.DAT";
+    if (par == 1) return "SFX.DAT";
+    if (par == 2) return "PARTICLEFX.DAT";
+    if (par == 3) return "VISUALFX.DAT";
+    if (par == 4) return "CAMERA.DAT";
+    if (par == 5) return "MENU.DAT";
+    if (par == 6) return "MUSIC.DAT";
+    return "UNKNOWN.DAT";
+  }
+  
+  static int GetDATIndexByParser( zCParser* par ) {
+    if( par == Gothic::Parsers::Game   ) return 0;
+    if( par == Gothic::Parsers::SFX    ) return 1;
+    if( par == Gothic::Parsers::PFX    ) return 2;
+    if( par == Gothic::Parsers::VFX    ) return 3;
+    if( par == Gothic::Parsers::Camera ) return 4;
+    if( par == Gothic::Parsers::Menu   ) return 5;
+    if( par == Gothic::Parsers::Music  ) return 6;
+    return -1;
   }
 
 
@@ -53,6 +74,9 @@ namespace GOTHIC_ENGINE {
       (zoptions->Parm( "ZREPARSE_GAME" ) && zoptions->Parm( "ZREPARSE_OU" ));
   }
 
+  static bool OptimiseStringTable() {
+    return zoptions->Parm("OST");
+  }
 
   HOOK Hook_zCParser_SaveDat PATCH( &zCParser::SaveDat, &zCParser::SaveDat_Union );
 
