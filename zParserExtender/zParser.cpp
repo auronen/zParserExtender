@@ -78,6 +78,17 @@ namespace GOTHIC_ENGINE {
     return zoptions->Parm("OST");
   }
 
+  static bool DirectiveDefined(string& directive) {
+    string s = zoptions->ParmValue("D");
+    Array<string> directives = s.Split(",");
+    for (size_t i = 0; i < directives.GetNum(); i++)
+    {
+      if (directives[i] == directive)
+        return true;
+    }
+    return false;
+  }
+
   HOOK Hook_zCParser_SaveDat PATCH( &zCParser::SaveDat, &zCParser::SaveDat_Union );
 
   int zCParser::SaveDat_Union( zSTRING& name ) {
@@ -169,6 +180,8 @@ namespace GOTHIC_ENGINE {
         DeclareIf();
       else if( zParserExtender.ExtendedParsingEnabled() && word == "TEST" )
         DeclareTest();
+      else if ( word == "#IF" )
+        DeclareDirective();
       else if( whileEnabled && word == "WHILE" )
         DeclareWhile_Union();
       else if( whileEnabled && word == "BREAK" )
@@ -334,6 +347,45 @@ namespace GOTHIC_ENGINE {
     }
   }
 
+  void zCParser::DeclareDirective() {
+    zSTRING word;
+    bool test = TestDirectiveExpression();
+
+    if (test) {
+      bool opline = ParseBlockOrOperatorLine();
+      ReadWordBase(word);
+      if (word == "#ELSE") {
+        if (SkipBlock())
+          PrevWord();
+      }
+      else if (word == "#ELSEIF") {
+        DeclareDirective();
+      }
+      else {
+        PrevWord();
+        if (opline)
+          PrevWord();
+      }
+    }
+    else {
+      bool opline = SkipBlock();
+      ReadWordBase(word);
+      if (word == "#ELSE") {
+        bool opline = ParseBlockOrOperatorLine();
+        if (opline)
+          PrevWord();
+      }
+      else if (word == "#ELSEIF") {
+        DeclareDirective();
+      }
+      else {
+        PrevWord();
+        if (opline)
+          PrevWord();
+      }
+    }
+  }
+
   void zCParser::DeclareExtern() {
     zSTRING word;
     ReadWordBase( word );
@@ -370,22 +422,44 @@ namespace GOTHIC_ENGINE {
 
   bool zCParser::TestSymbol() {
     zSTRING word;
-    ReadWordBase( word );
-    if( word == "!" ) {
+    ReadWordBase(word);
+    if (word == "!") {
       return !TestSymbol();
     }
-    else if( word == "(" ) {
+    else if (word == "(") {
       int ok = TestSymbolExpresstion();
-      Match( Z ")" );
+      Match(Z ")");
       return ok;
     }
 
-         if( word == "STEAM" && CheckSteamEnabled() ) return true;
-    else if( word == "G1"  && ENGINE == Engine_G1   ) return true;
-    else if( word == "G1A" && ENGINE == Engine_G1A  ) return true;
-    else if( word == "G2"  && ENGINE == Engine_G2   ) return true;
-    else if( word == "G2A" && ENGINE == Engine_G2A  ) return true;
-    else                                              return symtab.GetIndex_Safe( word.Upper() ) != Invalid;
+    if (word == "STEAM" && CheckSteamEnabled()) return true;
+    else if (word == "G1" && ENGINE == Engine_G1) return true;
+    else if (word == "G1A" && ENGINE == Engine_G1A) return true;
+    else if (word == "G2" && ENGINE == Engine_G2) return true;
+    else if (word == "G2A" && ENGINE == Engine_G2A) return true;
+    else                                              return symtab.GetIndex_Safe(word.Upper()) != Invalid;
+    return false;
+  }
+
+  bool zCParser::TestDirective() {
+    zSTRING word;
+    ReadWordBase(word);
+    if (word == "!") {
+      return !TestDirective();
+    }
+    else if (word == "(") {
+      int ok = TestDirectiveExpression();
+      Match(Z ")");
+      return ok;
+    }
+
+    if (word == "TRUE")
+      return true;
+    else if (word == "FALSE")
+      return false;
+    else if (DirectiveDefined((string)word))
+      return true;
+
     return false;
   }
 
@@ -431,6 +505,35 @@ namespace GOTHIC_ENGINE {
         ok = TestSymbol() || ok;
       }
       else if( word == ")" ) {
+        PrevWord();
+        return ok;
+      }
+      else {
+        PrevWord();
+        break;
+      }
+    }
+
+    return ok;
+  }
+
+  bool zCParser::TestDirectiveExpression() {
+    bool ok = TestDirective();
+
+    zSTRING word;
+    while (true)
+    {
+      word = GetNextTestOperator(this);
+      if (word == "!") {
+        ok = !TestDirective();
+      }
+      else if (word == "&&") {
+        ok = TestDirective() && ok;
+      }
+      else if (word == "||") {
+        ok = TestDirective() || ok;
+      }
+      else if (word == ")") {
         PrevWord();
         return ok;
       }

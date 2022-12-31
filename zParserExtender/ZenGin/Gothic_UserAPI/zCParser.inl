@@ -66,6 +66,11 @@ void SkipString();
 int ParseFileWord( const zSTRING& word );
 void ReadString_Union( zSTRING& s );
 
+// preprocessor like macros
+void DeclareDirective();
+bool TestDirective();
+bool TestDirectiveExpression();
+
 void PreCompile();
 void RenameTreeNode( zCPar_Symbol* sym, zSTRING newName );
 

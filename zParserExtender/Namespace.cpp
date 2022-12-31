@@ -455,7 +455,6 @@ namespace GOTHIC_ENGINE {
   HOOK Hook_zCParser_Reset PATCH(&zCParser::Reset, &zCParser::Reset_Union);
 
   void zCParser::Reset_Union() {
-    //cmd << GetParserNameByParser(this) << " " << __FUNCTION__ << endl;
     int parID = GetDATIndexByParser(this);
     if (parID != -1)
       optimizedStringTable[GetDATIndexByParser(this)].clear();
