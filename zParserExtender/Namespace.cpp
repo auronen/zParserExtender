@@ -313,9 +313,11 @@ namespace GOTHIC_ENGINE {
   HOOK Hook_zCParser_CreateStringLeaf PATCH( &zCParser::CreateStringLeaf, &zCParser::CreateStringLeaf_Union );
 
   zCPar_TreeNode* zCParser::CreateStringLeaf_Union() {
-    DeclareNamespaceForNextWord( 1 );
+    DeclareNamespaceForNextWord(1);
     DeclareNamespaceForNextParenthesis();
-    return THISCALL( Hook_zCParser_CreateStringLeaf )();
+    zCPar_TreeNode* node = THISCALL(Hook_zCParser_CreateStringLeaf)();
+    node->value = ReadArray();
+    return node;
   }
 
 
