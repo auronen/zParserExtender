@@ -216,6 +216,8 @@ namespace GOTHIC_ENGINE {
         DeclareReturn();
       else if( word == "IF" )
         DeclareIf();
+      else if( word == "#IF" )
+         DeclareDirective();
       else if( word == "TEST" )
         DeclareTest();
       else if( whileEnabled && word == "WHILE" )
@@ -249,6 +251,10 @@ namespace GOTHIC_ENGINE {
     }
     else if( word == "EXTERN" ) {
       DeclareExtern();
+      return True;
+    }
+    else if( word == "#IF" ) {
+      DeclareDirective();
       return True;
     }
 
