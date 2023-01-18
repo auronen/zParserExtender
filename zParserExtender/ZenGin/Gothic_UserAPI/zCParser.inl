@@ -67,6 +67,8 @@ int ParseFileWord( const zSTRING& word );
 void ReadString_Union( zSTRING& s );
 
 // preprocessor like macros
+bool SkipMacroBlock();
+bool ParseMacroBlockOrOperatorLine();
 void DeclareDirective();
 bool TestDirective();
 bool TestDirectiveExpression();

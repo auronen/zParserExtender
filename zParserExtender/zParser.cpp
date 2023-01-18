@@ -181,7 +181,10 @@ namespace GOTHIC_ENGINE {
       else if( zParserExtender.ExtendedParsingEnabled() && word == "TEST" )
         DeclareTest();
       else if ( word == "#IF" )
+      {
         DeclareDirective();
+        continue;
+      }
       else if( whileEnabled && word == "WHILE" )
         DeclareWhile_Union();
       else if( whileEnabled && word == "BREAK" )
@@ -216,8 +219,8 @@ namespace GOTHIC_ENGINE {
         DeclareReturn();
       else if( word == "IF" )
         DeclareIf();
-      else if( word == "#IF" )
-         DeclareDirective();
+      else if ( word == "#IF" )
+        DeclareDirective();
       else if( word == "TEST" )
         DeclareTest();
       else if( whileEnabled && word == "WHILE" )
@@ -255,7 +258,7 @@ namespace GOTHIC_ENGINE {
     }
     else if( word == "#IF" ) {
       DeclareDirective();
-      return True;
+      return 2; // skips the "match ;" test, see Plugin.patch
     }
 
     return False;
@@ -289,6 +292,37 @@ namespace GOTHIC_ENGINE {
       ParseOperatorLine();
       return true;
     }
+  }
+  
+  bool zCParser::ParseMacroBlockOrOperatorLine() {
+    zSTRING word;
+    int entries = 1;
+    while (true) {
+      ReadWordBase(word);
+      if (string(word).First() == '#') {
+        if (word == "#ENDIF")
+          return true;
+
+        PrevWord();
+        break;
+      }
+      else {
+        PrevWord();
+      }
+      ParseOperatorLine();
+      ReadWordBase(word);
+      if (word == "}") {
+        if (--entries <= 0)
+          break;
+      }
+      else if (word.IsEmpty()) {
+        Error();
+        return false;
+      }
+      else
+        PrevWord();
+    }
+    return false;
   }
 
 
@@ -356,38 +390,28 @@ namespace GOTHIC_ENGINE {
   void zCParser::DeclareDirective() {
     zSTRING word;
     bool test = TestDirectiveExpression();
-
     if (test) {
-      bool opline = ParseBlockOrOperatorLine();
+      bool end = ParseMacroBlockOrOperatorLine();
+      if (end) return;
       ReadWordBase(word);
       if (word == "#ELSE") {
-        if (SkipBlock())
-          PrevWord();
+        SkipMacroBlock();
       }
-      else if (word == "#ELSEIF") {
+      else if (word == "#ELIF") {
         DeclareDirective();
-      }
-      else {
-        PrevWord();
-        if (opline)
-          PrevWord();
       }
     }
     else {
-      bool opline = SkipBlock();
+      bool end_ = SkipMacroBlock();
+      if (end_) return;
+
       ReadWordBase(word);
       if (word == "#ELSE") {
-        bool opline = ParseBlockOrOperatorLine();
-        if (opline)
-          PrevWord();
+        bool end = ParseMacroBlockOrOperatorLine();
+        if (end) return;
       }
-      else if (word == "#ELSEIF") {
+      else if (word == "#ELIF") {
         DeclareDirective();
-      }
-      else {
-        PrevWord();
-        if (opline)
-          PrevWord();
       }
     }
   }
@@ -570,6 +594,22 @@ namespace GOTHIC_ENGINE {
       else if( entries <= 0 && word == ";" )
         break;
     }
+  }
+
+  bool zCParser::SkipMacroBlock() {
+    zSTRING word;
+    while (true) {
+      ReadWordBase(word);
+      if (string(word).First() == '#') {
+        if (word == "#ENDIF")
+          return true;
+        else 
+          PrevWord();
+        break;
+      }
+    }
+
+    return false;
   }
 
   bool zCParser::SkipBlock() {

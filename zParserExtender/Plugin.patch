@@ -10,8 +10,10 @@
 		push	ecx
 		mov		ecx, esi
 		call	dword ptr[$ParseFileWord]
-		test	eax, eax
+		test	eax, 1
 		jnz		0x0078FC18
+		test    eax, 2
+		jnz     0x0078fc5a
 		orgcode
 	#/assembler
 #/engine
@@ -25,8 +27,10 @@
 		push	ecx
 		mov		ecx, esi
 		call	dword ptr[$ParseFileWord]
-		test	eax, eax
+		test	eax, 1
 		jnz		0x007301D8
+		test	eax, 2
+		jnz		0x0073021a
 		orgcode
 	#/assembler
 
@@ -52,8 +56,10 @@
 		push	ecx
 		mov		ecx, esi
 		call	dword ptr[$ParseFileWord]
-		test	eax, eax
+		test	eax, 1
 		jnz		0x0071F6BE
+		test	eax, 2
+		jnz		0x0071f70a
 		orgcode
 	#/assembler
 
@@ -80,8 +86,10 @@
 		push	ecx
 		mov		ecx, esi
 		call	dword ptr[$ParseFileWord]
-		test	eax, eax
+		test	eax, 1
 		jnz		0x006E69F7
+		test	eax, 2
+		jnz		0x006e6a39
 		orgcode
 	#/assembler
 #/engine
