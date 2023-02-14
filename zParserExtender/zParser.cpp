@@ -298,29 +298,18 @@ namespace GOTHIC_ENGINE {
     zSTRING word;
     int entries = 1;
     while (true) {
-      ReadWordBase(word);
+      ReadWord(word);
       if (string(word).First() == '#') {
-        if (word == "#ENDIF")
+        if (word == "#ENDIF") {
           return true;
-
-        PrevWord();
-        break;
+        }
+        else if (word != "#IF") {
+          PrevWord();
+          return false;
+        }
       }
-      else {
-        PrevWord();
-      }
+      PrevWord();
       ParseOperatorLine();
-      ReadWordBase(word);
-      if (word == "}") {
-        if (--entries <= 0)
-          break;
-      }
-      else if (word.IsEmpty()) {
-        Error();
-        return false;
-      }
-      else
-        PrevWord();
     }
     return false;
   }
@@ -395,11 +384,14 @@ namespace GOTHIC_ENGINE {
       if (end) return;
       ReadWordBase(word);
       if (word == "#ELSE") {
-        SkipMacroBlock();
+        SkipMacroBlockUntilEndif();
+        return;
       }
       else if (word == "#ELIF") {
-        DeclareDirective();
+        SkipMacroBlockUntilEndif();
+        return;
       }
+      PrevWord();
     }
     else {
       bool end_ = SkipMacroBlock();
@@ -596,21 +588,46 @@ namespace GOTHIC_ENGINE {
     }
   }
 
-  bool zCParser::SkipMacroBlock() {
+  void zCParser::SkipMacroBlockUntilEndif() {
     zSTRING word;
     while (true) {
       ReadWordBase(word);
-      if (string(word).First() == '#') {
-        if (word == "#ENDIF")
-          return true;
-        else 
+      if (word == "#ENDIF")
+        return;
+    }
+    return;
+  }
+
+  bool zCParser::SkipMacroBlock() {
+    zSTRING word;
+    int level = 0;
+    while (true) {
+      ReadWordBase(word);
+      if (word == "#IF") {
+        level++;
+        continue;
+      }
+        else if (word == "#ENDIF") {
+          if (--level <= 0)
+          {
+            ReadWordBase(word);
+            if (string(word).First() == '#') {
+              if (word == "#ENDIF") {
+                return true;
+              }
+              else {
+                PrevWord();
+                return false;
+              }
+            }
+          }
+        }
+        if (string(word).First() == '#' && level <= 0) {
           PrevWord();
-        break;
+          return false;
+        }
       }
     }
-
-    return false;
-  }
 
   bool zCParser::SkipBlock() {
     zSTRING word;

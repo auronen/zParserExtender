@@ -68,6 +68,7 @@ void ReadString_Union( zSTRING& s );
 
 // preprocessor like macros
 bool SkipMacroBlock();
+void SkipMacroBlockUntilEndif();
 bool ParseMacroBlockOrOperatorLine();
 void DeclareDirective();
 bool TestDirective();
