@@ -69,10 +69,8 @@ namespace GOTHIC_ENGINE {
     {
       for (size_t i = 0; i < 7; i++)
       {
-        cmd << GetDATNameByIndex(i) << endl;
-        cmd << "Amount of string literals: " << totalStrings[i] << endl;
-        cmd << "Number of string literals after optimisation: " << totalStrings[i] - optimizedStrings[i] << endl;
-        cmd << "Number of string literal symbols saved: " << optimizedStrings[i] << endl;
+        if (optimizedStrings[i])
+          cmd << GetDATNameByIndex(i) << ":\t\toptimized " << optimizedStrings[i] << " string symbols." << endl;
       }
     }
   }

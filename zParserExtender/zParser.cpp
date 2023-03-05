@@ -75,7 +75,7 @@ namespace GOTHIC_ENGINE {
   }
 
   static bool OptimiseStringTable() {
-    return zoptions->Parm("OST");
+    return !zoptions->Parm("NOSTO");
   }
 
   static bool DirectiveDefined(string& directive) {
@@ -383,7 +383,6 @@ namespace GOTHIC_ENGINE {
       bool end = ParseMacroBlockOrOperatorLine();
       if (end) return;
       ReadWordBase(word);
-      cmd << __FUNCTION__ << " " << word << endl;
       if (word == "#ELSE") {
         SkipMacroBlockUntilEndif();
         return;
@@ -593,7 +592,6 @@ namespace GOTHIC_ENGINE {
     zSTRING word;
     while (true) {
       ReadWordBase(word);
-      cmd << __FUNCTION__ << " " << word << endl;
       if (word == "\"") {
         PrevWord();
         SkipString();
@@ -610,7 +608,6 @@ namespace GOTHIC_ENGINE {
     int level = 0;
     while (true) {
       ReadWordBase(word);
-      cmd << __FUNCTION__ << " " << word << endl;
       if (word == "\"") {
         PrevWord();
         SkipString();
