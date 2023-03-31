@@ -78,6 +78,19 @@ namespace GOTHIC_ENGINE {
     return !zoptions->Parm("NOSTO");
   }
 
+  static bool Parsing() {
+    return zoptions->Parm("ZREPARSE") ||
+      (zoptions->Parm("ZREPARSE_GAME") && zoptions->Parm("ZREPARSE_OU")) ||
+      zoptions->Parm("ZREPARSE_GAME") ||
+      zoptions->Parm("ZREPARSE_SFX") ||
+      zoptions->Parm("ZREPARSE_PFX") ||
+      zoptions->Parm("ZREPARSE_VFX") ||
+      zoptions->Parm("ZREPARSE_CAMERA") ||
+      zoptions->Parm("ZREPARSE_MENU") ||
+      zoptions->Parm("ZREPARSE_MUSIC") ||
+      zoptions->Parm("ZREPARSE_FIGHT");
+  }
+
   static bool DirectiveDefined(string& directive) {
     string s = zoptions->ParmValue("D");
     Array<string> directives = s.Split(",");
@@ -1085,9 +1098,31 @@ namespace GOTHIC_ENGINE {
   }
 
 
-  HOOK Hook_zCParser_ReadString AS_IF( &zCParser::ReadString, &zCParser::ReadString_Union, 0 );
+  HOOK Hook_zCParser_ReadString AS_IF( &zCParser::ReadString, &zCParser::ReadString_Union, 1 );
 
   void zCParser::ReadString_Union( zSTRING& s ) {
+/*
+    s = "";
+    Match(zSTRING("\""));
+    while (1) {
+      if (*pc == '\"') break;
+
+      if (*pc == '\\' && *(pc + 1) == '\"') {
+        s += *pc;
+        pc++;
+        s += *pc;
+        pc++;
+        continue;
+      }
+
+      s += *pc;
+      if (pc < pc_stop)
+        pc++;
+      else
+        cmd << "Unexpected End of File." << endl;
+    }
+    pc++;
+    */
     ReadWord( aword );
     zCPar_Symbol* sym = GetSymbol( aword );
     if( sym ) {

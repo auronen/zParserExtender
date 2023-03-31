@@ -65,7 +65,7 @@ namespace GOTHIC_ENGINE {
 
     // InitializeColorConstants();
     // InitializePositionConstants();
-    if (OptimiseStringTable())
+    if (OptimiseStringTable() && Parsing())
     {
       for (size_t i = 0; i < 7; i++)
       {
