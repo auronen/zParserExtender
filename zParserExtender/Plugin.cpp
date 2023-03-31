@@ -67,6 +67,7 @@ namespace GOTHIC_ENGINE {
     // InitializePositionConstants();
     if (OptimiseStringTable() && Parsing())
     {
+      cmd << "String table optimisaion is on. If you wish to turn it off use -" << NO_STRING_OPTIMIZATION_CLPARAM << " command line option." << endl;
       for (size_t i = 0; i < 7; i++)
       {
         if (optimizedStrings[i])

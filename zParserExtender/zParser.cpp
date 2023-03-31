@@ -74,8 +74,10 @@ namespace GOTHIC_ENGINE {
       (zoptions->Parm( "ZREPARSE_GAME" ) && zoptions->Parm( "ZREPARSE_OU" ));
   }
 
+#define NO_STRING_OPTIMIZATION_CLPARAM "NOSTO"
+
   static bool OptimiseStringTable() {
-    return !zoptions->Parm("NOSTO");
+    return !zoptions->Parm(NO_STRING_OPTIMIZATION_CLPARAM);
   }
 
   static bool Parsing() {

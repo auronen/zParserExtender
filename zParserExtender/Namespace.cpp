@@ -1,6 +1,5 @@
 // Supported with union (c) 2020 Union team
 // Union SOURCE file
-#include <map>
 
 namespace GOTHIC_ENGINE {
   struct NamespaceInfo {
@@ -395,7 +394,23 @@ namespace GOTHIC_ENGINE {
     }
   }
 
-  std::map<string, int> optimizedStringTable[7];
+  // Case sensitive hashing by Gratt
+  class StringCaseSensitive : public string {
+  public:
+    bool_t operator == (const string& str) const {
+      return strcmp(*this, str) == 0;
+    }
+
+    bool_t operator < (const string& str) const {
+      return strcmp(*this, str) < 0;
+    }
+
+    bool_t operator > (const string& str) const {
+      return strcmp(*this, str) > 0;
+    }
+  };
+
+  Map<StringCaseSensitive, int> optimizedStringTable[7];
   int totalStrings[7] = {0};
   int optimizedStrings[7] = { 0 };
 
@@ -403,8 +418,6 @@ namespace GOTHIC_ENGINE {
   HOOK Hook_zCParser_PushOnStack PATCH( &zCParser::PushOnStack, &zCParser::PushOnStack_Union );
 
   zCPar_TreeNode* zCParser::PushOnStack_Union( zCPar_TreeNode* node ) {
-    //if (GetDATIndexByParser(this) == 3) cmd << GetDATNameByIndex(3) << endl;
-
     if (OptimiseStringTable()) {
     if (node->token == zPAR_TOK_NEWSTRING) {
         int parID = GetDATIndexByParser(this);
@@ -412,8 +425,9 @@ namespace GOTHIC_ENGINE {
         totalStrings[parID]++;
         if (node->right)	PushTree(node->right);
         if (node->left)		PushTree(node->left);
-        if (optimizedStringTable[parID].find(string(node->name)) == optimizedStringTable[parID].end()) {
-          // not found - create new string symbol
+
+        auto& val = optimizedStringTable[parID][static_cast<StringCaseSensitive&>((string)node->name)];
+        if (val.IsNull()) {
           zCPar_Symbol* sym = new zCPar_Symbol;
 
           sym->type = zPAR_TYPE_STRING;
@@ -428,16 +442,14 @@ namespace GOTHIC_ENGINE {
           stack.PushByte(zPAR_TOK_PUSHVAR);
           stack.PushInt(symtab.GetNumInList() - 1);
 
-          optimizedStringTable[parID].insert(std::make_pair(node->name, symtab.GetNumInList() - 1));
-        }
-        else {
+          optimizedStringTable[parID].Insert(static_cast<StringCaseSensitive&>((string)node->name), symtab.GetNumInList() - 1);
+        } else {
           // found = string literal already exists - push the already existing symbol
           optimizedStrings[parID]++;
-          zCPar_Symbol* sym = symtab.GetSymbol(optimizedStringTable[parID].at(node->name));
+          zCPar_Symbol* sym = symtab.GetSymbol(optimizedStringTable[parID][static_cast<StringCaseSensitive&>((string)node->name)]);
 
           if (!sym) {
             cmd << "Something sussy is going on" << endl;
-            // cmd << "symbtab index: " << optimizedStringTable[parID].at(string(node->name)) << endl;
           }
           int symbolID = symtab.GetIndex(sym);
 
@@ -459,7 +471,7 @@ namespace GOTHIC_ENGINE {
   void zCParser::Reset_Union() {
     int parID = GetDATIndexByParser(this);
     if (parID != -1)
-      optimizedStringTable[GetDATIndexByParser(this)].clear();
+      optimizedStringTable[GetDATIndexByParser(this)].Clear();
     THISCALL(Hook_zCParser_Reset)();
   }
 
